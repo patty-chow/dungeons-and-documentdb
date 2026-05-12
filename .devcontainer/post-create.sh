@@ -54,7 +54,10 @@ cat <<'EOF'
     mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
 
   To chat with the NPCs you need an LLM key:
-    1. Edit .env and set ANTHROPIC_API_KEY or OPENAI_API_KEY.
+    1. Edit .env and set OPENAI_API_KEY (recommended -- one key powers
+       both chat and the spell book's vector search). ANTHROPIC_API_KEY
+       also works for chat, but you still need OPENAI_API_KEY for the
+       spell book to match the shipped pre-embedded data.
     2. Run a demo:
          python -m src.tavern.chat        # CLI: tavern keeper
          python -m src.spellbook.chat     # CLI: spell book

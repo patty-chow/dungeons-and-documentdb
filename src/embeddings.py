@@ -1,8 +1,14 @@
-"""Embedding generation -- Voyage AI (preferred) or OpenAI fallback.
+"""Embedding generation -- OpenAI (preferred) or Voyage AI alternative.
 
 The provider is auto-detected from env vars:
-  - VOYAGE_API_KEY present  -> Voyage AI (recommended alongside Claude).
-  - OPENAI_API_KEY present -> OpenAI text-embedding-3-small.
+  - OPENAI_API_KEY present -> OpenAI text-embedding-3-small (1536-dim).
+    Preferred because the shipped `data/srd_spells_embedded.json` is
+    generated with this model. Using a different provider at query
+    time would produce vectors of incompatible dimensions and the
+    cosmosSearch index would reject the query.
+  - VOYAGE_API_KEY present -> Voyage AI. Use this only if you also
+    re-embed the spell book with `python scripts/seed_all.py` so the
+    index matches.
 
 We keep this module deliberately tiny so beginners can read and adapt it.
 """
@@ -18,13 +24,13 @@ load_dotenv()
 
 @lru_cache(maxsize=1)
 def _provider() -> str:
-    if os.getenv("VOYAGE_API_KEY"):
-        return "voyage"
     if os.getenv("OPENAI_API_KEY"):
         return "openai"
+    if os.getenv("VOYAGE_API_KEY"):
+        return "voyage"
     raise RuntimeError(
-        "No embeddings provider configured. Set VOYAGE_API_KEY (preferred) "
-        "or OPENAI_API_KEY in your .env file."
+        "No embeddings provider configured. Set OPENAI_API_KEY (preferred, "
+        "matches the shipped embedded data) or VOYAGE_API_KEY in your .env file."
     )
 
 
@@ -40,21 +46,21 @@ def embed(text: str) -> list[float]:
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed a list of strings. Returns a list of vectors."""
-    if _provider() == "voyage":
-        import voyageai
+    if _provider() == "openai":
+        from openai import OpenAI
 
-        client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
-        model = os.getenv("VOYAGE_MODEL", "voyage-3-lite")
-        result = client.embed(texts, model=model, input_type="document")
-        return [list(map(float, e)) for e in result.embeddings]
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+        resp = client.embeddings.create(model=model, input=texts)
+        return [list(map(float, item.embedding)) for item in resp.data]
 
-    # OpenAI fallback
-    from openai import OpenAI
+    # Voyage AI alternative
+    import voyageai
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    resp = client.embeddings.create(model=model, input=texts)
-    return [list(map(float, item.embedding)) for item in resp.data]
+    client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
+    model = os.getenv("VOYAGE_MODEL", "voyage-3-lite")
+    result = client.embed(texts, model=model, input_type="document")
+    return [list(map(float, e)) for e in result.embeddings]
 
 
 @lru_cache(maxsize=1)

@@ -32,7 +32,7 @@ Once the codespace finishes building:
 
 ```bash
 # 1. Add your LLM key (only needed for the chat demos)
-code .env                      # set ANTHROPIC_API_KEY or OPENAI_API_KEY
+code .env                      # set OPENAI_API_KEY (recommended single key)
 
 # 2. Roll for initiative -- data is already loaded
 python -m src.tavern.chat      # CLI: tavern keeper
@@ -69,7 +69,9 @@ pip install -r requirements.txt
 
 # 4. Add your LLM key (only needed for the chat demos)
 cp .env.example .env
-# Edit .env -- ANTHROPIC_API_KEY=sk-ant-... (or OPENAI_API_KEY=sk-...)
+# Edit .env -- OPENAI_API_KEY=sk-... (recommended; one key powers chat + embeddings)
+#              or ANTHROPIC_API_KEY=sk-ant-... (chat only; you'll still need OPENAI_API_KEY
+#              for the spell book's vector search to match the shipped embeddings)
 
 # 5. Load NPCs, the player, and the spell book (uses pre-embedded data,
 #    no LLM key required). Vector search works immediately.
@@ -167,8 +169,8 @@ dungeons-and-documentdb/
 │   └── srd_spells.json         # 50 5e SRD spells (CC-BY-4.0)
 ├── src/
 │   ├── db.py                   # DocumentDB connection helpers
-│   ├── embeddings.py           # Voyage / OpenAI embedding client
-│   ├── llm.py                  # Claude / OpenAI chat client
+│   ├── embeddings.py           # OpenAI / Voyage embedding client
+│   ├── llm.py                  # OpenAI / Claude chat client
 │   ├── tavern/                 # Demo 1: NPC memory agent
 │   │   ├── npc.py
 │   │   ├── memory.py
@@ -197,8 +199,8 @@ dungeons-and-documentdb/
 |-----------|--------|
 | Database  | [OSS DocumentDB](https://github.com/documentdb/documentdb) (Docker, port `10260`) |
 | Driver    | `pymongo` (DocumentDB speaks the MongoDB wire protocol) |
-| LLM       | Anthropic Claude (preferred), OpenAI (fallback) |
-| Embeddings| Voyage AI via Anthropic, OR OpenAI `text-embedding-3-small` |
+| LLM       | OpenAI `gpt-4o-mini` (default), Anthropic Claude (alternative) |
+| Embeddings| OpenAI `text-embedding-3-small` (default, 1536-dim, matches shipped data), Voyage AI (alternative) |
 | CLI       | `rich` |
 
 ---
@@ -226,7 +228,7 @@ mongosh "mongodb://admin:dungeons123!@localhost:10260/?tls=true&tlsAllowInvalidC
 | `OperationFailure: command createIndexes ... vector` | You're on an older DocumentDB image. `docker compose pull && docker compose up -d`. |
 | Spells return weird results | Re-run `python scripts/seed_all.py` -- embeddings may have failed mid-seed. |
 | Windows + `source .venv/...` | Use `.venv\Scripts\activate` instead. |
-| `No LLM provider configured` | Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`. |
+| `No LLM provider configured` | Set `OPENAI_API_KEY` (recommended) or `ANTHROPIC_API_KEY` in `.env`. |
 
 ---
 
