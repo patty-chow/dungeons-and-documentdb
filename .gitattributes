@@ -1,0 +1,7 @@
+# Force LF endings for files that run inside Linux containers (Codespaces /
+# devcontainers). Without this, Windows clients with `core.autocrlf=true`
+# would convert these to CRLF on checkout and break shell parsing.
+*.sh                  text eol=lf
+.devcontainer/**      text eol=lf
+docker-compose.yml    text eol=lf
+Dockerfile            text eol=lf

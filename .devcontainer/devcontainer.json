@@ -1,0 +1,59 @@
+{
+  "name": "Dungeons and DocumentDB",
+
+  // Compose the workspace service alongside the project's existing DocumentDB
+  // service. The root docker-compose.yml stays the source of truth for the DB,
+  // so local users running `docker compose up -d` are unaffected.
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.yml"
+  ],
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/dungeons-and-documentdb",
+  "shutdownAction": "stopCompose",
+
+  // Forward DocumentDB (10260) so the local DocumentDB extension can connect,
+  // and Streamlit (8501) so the optional web UI auto-opens in a browser tab.
+  "forwardPorts": [10260, 8501],
+  "portsAttributes": {
+    "10260": {
+      "label": "DocumentDB",
+      "onAutoForward": "silent"
+    },
+    "8501": {
+      "label": "Streamlit Web UI",
+      "onAutoForward": "openPreview"
+    }
+  },
+
+  // Inside the workspace container, DocumentDB is reachable by service name
+  // (not localhost). load_dotenv() does not override existing env vars, so
+  // copying .env.example to .env later still works for LLM keys.
+  "containerEnv": {
+    "DOCUMENTDB_HOST": "documentdb",
+    "PYTHONUNBUFFERED": "1"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // The DocumentDB GUI: browse collections, run find queries, inspect docs.
+        "ms-azuretools.vscode-documentdb",
+        // Python tooling.
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"],
+        "python.terminal.activateEnvironment": false,
+        "files.eol": "\n"
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "remoteUser": "vscode"
+}

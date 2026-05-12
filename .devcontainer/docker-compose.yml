@@ -1,0 +1,18 @@
+# Devcontainer overlay. Merged with the root docker-compose.yml when launched
+# from VS Code Dev Containers or GitHub Codespaces. The root file owns the
+# `documentdb` service definition; this file only adds the `workspace`
+# container that runs Python and serves as the editor's remote host.
+
+services:
+  workspace:
+    image: mcr.microsoft.com/devcontainers/python:1-3.11-bookworm
+    # Source path is resolved relative to the compose project directory (the
+    # repo root, set by the first compose file in devcontainer.json's list),
+    # not relative to this overlay file. So `.` means "the repo root".
+    volumes:
+      - .:/workspaces/dungeons-and-documentdb:cached
+    command: sleep infinity
+    depends_on:
+      - documentdb
+    # Shares the default compose network so the workspace can reach the
+    # database at the host name `documentdb` on port 10260.

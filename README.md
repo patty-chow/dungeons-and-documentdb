@@ -13,7 +13,45 @@ No cloud account. No MongoDB experience required. Runs on a laptop in under five
 
 ---
 
-## ⚡ Quickstart
+## 🚀 Run it in GitHub Codespaces (zero local setup)
+
+The fastest way to try the demos. No Docker, no Python, no extensions to install — everything is preconfigured in the devcontainer, including the **DocumentDB for VS Code** extension.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/patty-chow/dungeons-and-documentdb?quickstart=1)
+
+What you get on first launch:
+
+- Python 3.11 workspace container
+- DocumentDB running as a sidecar service (reachable at `documentdb:10260`)
+- All Python deps installed (`pymongo`, `anthropic`, `openai`, `voyageai`, `streamlit`, `rich`, ...)
+- DocumentDB for VS Code extension preinstalled (sidebar → DocumentDB icon)
+- Ports `10260` (DB) and `8501` (Streamlit) auto-forwarded
+- A `.env` file pre-seeded from `.env.example`
+
+Once the codespace finishes building:
+
+```bash
+# 1. Add your LLM key
+code .env                      # set ANTHROPIC_API_KEY or OPENAI_API_KEY
+
+# 2. Seed NPCs, the player, and the spell book (with vector embeddings)
+python scripts/seed_all.py
+
+# 3. Roll for initiative
+python -m src.tavern.chat      # CLI: tavern keeper
+python -m src.spellbook.chat   # CLI: spell book
+streamlit run webui/app.py     # Web UI on port 8501
+```
+
+To browse the data with the **DocumentDB for VS Code** extension, click the DocumentDB icon in the activity bar and connect with:
+
+```
+mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
+```
+
+---
+
+## ⚡ Quickstart (run locally)
 
 ```bash
 # 1. Clone
