@@ -31,13 +31,10 @@ What you get on first launch:
 Once the codespace finishes building:
 
 ```bash
-# 1. Add your LLM key
+# 1. Add your LLM key (only needed for the chat demos)
 code .env                      # set ANTHROPIC_API_KEY or OPENAI_API_KEY
 
-# 2. Seed NPCs, the player, and the spell book (with vector embeddings)
-python scripts/seed_all.py
-
-# 3. Roll for initiative
+# 2. Roll for initiative -- data is already loaded
 python -m src.tavern.chat      # CLI: tavern keeper
 python -m src.spellbook.chat   # CLI: spell book
 streamlit run webui/app.py     # Web UI on port 8501
@@ -48,6 +45,10 @@ To browse the data with the **DocumentDB for VS Code** extension, click the Docu
 ```
 mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
 ```
+
+You should see a `dnd` database with `npcs`, `players`, `conversations`, and `spells` collections preloaded.
+
+> ⚙️ **What if vector search returns nothing?** The shipped pre-embedded data lets the spell book work out-of-the-box. If `data/srd_spells_embedded.json` is missing from your fork, the post-create step loads the raw spell metadata only and the wizard demo's vector search will be disabled until you run `python scripts/seed_all.py` with an LLM key set in `.env`.
 
 ---
 
@@ -66,12 +67,13 @@ python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# 4. Add your LLM key
+# 4. Add your LLM key (only needed for the chat demos)
 cp .env.example .env
 # Edit .env -- ANTHROPIC_API_KEY=sk-ant-... (or OPENAI_API_KEY=sk-...)
 
-# 5. Seed the realm (NPCs, players, 50 spells, vector index)
-python scripts/seed_all.py
+# 5. Load NPCs, the player, and the spell book (uses pre-embedded data,
+#    no LLM key required). Vector search works immediately.
+python scripts/load_data.py
 
 # 6. Roll for initiative!
 python -m src.tavern.chat        # Chat with Bram the tavern keeper
@@ -79,6 +81,8 @@ python -m src.spellbook.chat     # Ask Elara about spells
 ```
 
 > Press `Ctrl+C` or type `/quit` to leave a chat session. Bram remembers across restarts.
+
+> 🔁 **Want to re-embed the spells with your own provider** (e.g. switch from OpenAI to Voyage AI)? Run `python scripts/seed_all.py` instead of `load_data.py` — it regenerates embeddings on the fly using whichever provider is configured in `.env`.
 
 ---
 
@@ -234,6 +238,21 @@ Fork it. Then:
 - **Add spells.** Append to `data/srd_spells.json` (SRD content only, please) and re-run `seed_all.py`.
 - **Wire in tools.** Give Bram a tool to actually post quests to a `quests` collection.
 - **Hot-swap LLMs.** The same code runs on Claude or OpenAI -- just change which key is set.
+
+---
+
+## 🛠️ For Maintainers: Regenerating the Pre-Embedded Spell Data
+
+`scripts/load_data.py` (run automatically in Codespaces and as step 5 of the local quickstart) prefers `data/srd_spells_embedded.json` because it lets new users get a working vector-search demo with **no embedding API key**. If you change `data/srd_spells.json` (add/edit spells, change `_embedding_input` shape), regenerate the embedded copy and commit it:
+
+```bash
+# Use OpenAI for the shipped data (1536 dims, widely supported)
+OPENAI_API_KEY=sk-... python scripts/generate_embeddings.py
+git add data/srd_spells_embedded.json
+git commit -m "Regenerate spell embeddings"
+```
+
+This file is intentionally NOT in `.gitignore` -- it's a deliberate artifact shipped with the repo so the demo works on first boot.
 
 ---
 

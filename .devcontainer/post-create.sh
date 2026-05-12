@@ -19,9 +19,11 @@ fi
 
 echo "==> Waiting for DocumentDB to accept connections..."
 ATTEMPTS=30
+DB_READY=0
 for i in $(seq 1 $ATTEMPTS); do
   if python -c "from src.db import ping; import sys; sys.exit(0 if ping() else 1)" 2>/dev/null; then
     echo "    DocumentDB is ready."
+    DB_READY=1
     break
   fi
   if [ "$i" -eq "$ATTEMPTS" ]; then
@@ -33,22 +35,33 @@ for i in $(seq 1 $ATTEMPTS); do
   fi
 done
 
+if [ "$DB_READY" -eq 1 ]; then
+  echo "==> Loading sample data..."
+  # load_data.py uses pre-embedded spells if data/srd_spells_embedded.json
+  # exists (no LLM key needed). Falls back to raw spells otherwise.
+  python scripts/load_data.py || echo "    (data load reported errors -- see output above)"
+fi
+
 cat <<'EOF'
 
 ================================================================
   Codespace ready.
 
-  Next steps:
-    1. Add an LLM API key to .env (ANTHROPIC_API_KEY or OPENAI_API_KEY).
-    2. Seed the realm:
-         python scripts/seed_all.py
-    3. Run a demo:
+  The database is preloaded with NPCs, the demo player, and the
+  spell book. Browse it with the DocumentDB extension in the
+  sidebar -- click the DocumentDB icon and add this connection:
+
+    mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
+
+  To chat with the NPCs you need an LLM key:
+    1. Edit .env and set ANTHROPIC_API_KEY or OPENAI_API_KEY.
+    2. Run a demo:
          python -m src.tavern.chat        # CLI: tavern keeper
          python -m src.spellbook.chat     # CLI: spell book
          streamlit run webui/app.py       # Web UI (port 8501)
 
-  Use the DocumentDB for VS Code extension (sidebar) to browse data:
-    Connection string:
-      mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
+  If the spells loaded without embeddings (no srd_spells_embedded.json
+  shipped), regenerate them with your own key:
+         python scripts/seed_all.py
 ================================================================
 EOF
