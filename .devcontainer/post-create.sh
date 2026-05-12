@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs once after the devcontainer is built. Installs Python dependencies,
-# bootstraps the .env file, and waits for DocumentDB to come up.
+# bootstraps the .env file, starts DocumentDB via docker compose, waits for
+# it to come up, then loads sample data.
 set -euo pipefail
 
 echo "==> Installing Python dependencies..."
@@ -12,10 +13,14 @@ echo "==> Bootstrapping .env..."
 if [ ! -f .env ]; then
   cp .env.example .env
   echo "    .env created from template."
-  echo "    Add ANTHROPIC_API_KEY or OPENAI_API_KEY before running the demos."
+  echo "    Add OPENAI_API_KEY before running the chat demos."
 else
   echo "    .env already exists, leaving it untouched."
 fi
+
+echo "==> Starting DocumentDB container..."
+# Uses the project's root docker-compose.yml. Same command a local user runs.
+docker compose up -d documentdb
 
 echo "==> Waiting for DocumentDB to accept connections..."
 ATTEMPTS=30
@@ -47,11 +52,17 @@ cat <<'EOF'
 ================================================================
   Codespace ready.
 
-  The database is preloaded with NPCs, the demo player, and the
-  spell book. Browse it with the DocumentDB extension in the
-  sidebar -- click the DocumentDB icon and add this connection:
+  DocumentDB is running as a Docker container managed by the
+  project's docker-compose.yml. Inspect it any time:
 
-    mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
+    docker compose ps
+    docker compose logs documentdb
+    docker compose restart documentdb
+
+  Browse the data with the DocumentDB extension in the sidebar.
+  Click the DocumentDB icon and add this connection:
+
+    mongodb://admin:dungeons123!@localhost:10260/?tls=true&tlsAllowInvalidCertificates=true
 
   To chat with the NPCs you need an LLM key:
     1. Edit .env and set OPENAI_API_KEY (recommended -- one key powers
@@ -63,8 +74,8 @@ cat <<'EOF'
          python -m src.spellbook.chat     # CLI: spell book
          streamlit run webui/app.py       # Web UI (port 8501)
 
-  If the spells loaded without embeddings (no srd_spells_embedded.json
-  shipped), regenerate them with your own key:
+  If the spells loaded without embeddings, regenerate them with
+  your own key:
          python scripts/seed_all.py
 ================================================================
 EOF

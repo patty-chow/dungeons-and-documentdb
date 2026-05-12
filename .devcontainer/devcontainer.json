@@ -1,16 +1,22 @@
 {
   "name": "Dungeons and DocumentDB",
 
-  // Compose the workspace service alongside the project's existing DocumentDB
-  // service. The root docker-compose.yml stays the source of truth for the DB,
-  // so local users running `docker compose up -d` are unaffected.
-  "dockerComposeFile": [
-    "../docker-compose.yml",
-    "docker-compose.yml"
-  ],
-  "service": "workspace",
-  "workspaceFolder": "/workspaces/dungeons-and-documentdb",
-  "shutdownAction": "stopCompose",
+  // Single-container devcontainer with Docker-in-Docker so the codespace
+  // user can manage the DocumentDB container themselves (`docker ps`,
+  // `docker logs`, `docker compose up/down`, etc.). DocumentDB is started
+  // automatically by the post-create step using the project's existing
+  // docker-compose.yml at the repo root.
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+
+  "features": {
+    // Brings the docker daemon + CLI + compose plugin into the codespace.
+    // Without this, you can't run `docker run` or `docker compose` inside.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    }
+  },
 
   // Forward DocumentDB (10260) so the local DocumentDB extension can connect,
   // and Streamlit (8501) so the optional web UI auto-opens in a browser tab.
@@ -26,11 +32,7 @@
     }
   },
 
-  // Inside the workspace container, DocumentDB is reachable by service name
-  // (not localhost). load_dotenv() does not override existing env vars, so
-  // copying .env.example to .env later still works for LLM keys.
   "containerEnv": {
-    "DOCUMENTDB_HOST": "documentdb",
     "PYTHONUNBUFFERED": "1"
   },
 
@@ -41,7 +43,9 @@
         "ms-azuretools.vscode-documentdb",
         // Python tooling.
         "ms-python.python",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        // Helpful Docker tooling for inspecting the documentdb container.
+        "ms-azuretools.vscode-docker"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -57,3 +61,4 @@
 
   "remoteUser": "vscode"
 }
+
