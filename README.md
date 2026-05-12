@@ -21,20 +21,25 @@ The fastest way to try the demos. No Docker, no Python, no extensions to install
 
 What you get on first launch:
 
-- Python 3.11 workspace container
-- DocumentDB running as a sidecar service (reachable at `documentdb:10260`)
+- Python 3.11 workspace container with Docker-in-Docker
+- DocumentDB started automatically via `docker compose up -d documentdb`
 - All Python deps installed (`pymongo`, `anthropic`, `openai`, `voyageai`, `streamlit`, `rich`, ...)
 - DocumentDB for VS Code extension preinstalled (sidebar → DocumentDB icon)
+- Docker for VS Code extension preinstalled (sidebar → Docker icon)
 - Ports `10260` (DB) and `8501` (Streamlit) auto-forwarded
+- Sample data loaded (NPCs, demo player, 50 spells with vector index)
 - A `.env` file pre-seeded from `.env.example`
 
 Once the codespace finishes building:
 
 ```bash
-# 1. Add your LLM key (only needed for the chat demos)
+# 1. Inspect what's running (optional)
+docker compose ps                # documentdb container should show 'Up'
+
+# 2. Add your LLM key (only needed for the chat demos)
 code .env                      # set OPENAI_API_KEY (recommended single key)
 
-# 2. Roll for initiative -- data is already loaded
+# 3. Roll for initiative -- data is already loaded
 python -m src.tavern.chat      # CLI: tavern keeper
 python -m src.spellbook.chat   # CLI: spell book
 streamlit run webui/app.py     # Web UI on port 8501
@@ -43,10 +48,12 @@ streamlit run webui/app.py     # Web UI on port 8501
 To browse the data with the **DocumentDB for VS Code** extension, click the DocumentDB icon in the activity bar and connect with:
 
 ```
-mongodb://admin:dungeons123!@documentdb:10260/?tls=true&tlsAllowInvalidCertificates=true
+mongodb://admin:dungeons123!@localhost:10260/?tls=true&tlsAllowInvalidCertificates=true
 ```
 
 You should see a `dnd` database with `npcs`, `players`, `conversations`, and `spells` collections preloaded.
+
+> ⚙️ **Manual control over DocumentDB.** The codespace has a full Docker daemon, so you can `docker compose down`, `docker compose logs documentdb -f`, or `docker compose restart documentdb` any time you need to debug or reset.
 
 > ⚙️ **What if vector search returns nothing?** The shipped pre-embedded data lets the spell book work out-of-the-box. If `data/srd_spells_embedded.json` is missing from your fork, the post-create step loads the raw spell metadata only and the wizard demo's vector search will be disabled until you run `python scripts/seed_all.py` with an LLM key set in `.env`.
 
