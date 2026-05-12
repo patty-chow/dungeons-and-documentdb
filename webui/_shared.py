@@ -91,18 +91,29 @@ def get_player_id() -> str:
 
 
 def jsonable(doc: dict) -> dict:
-    """Convert pymongo result types (ObjectId, datetime) to JSON-friendly."""
+    """Convert pymongo result types (ObjectId, datetime, etc.) to JSON-friendly.
+
+    Uses ``bson.json_util`` when available (it knows how to serialize every
+    BSON type pymongo emits), with a manual fallback that just stringifies
+    anything unknown.
+    """
+    try:
+        import json
+        from bson import json_util
+        return json.loads(json_util.dumps(doc))
+    except Exception:
+        return _manual_jsonable(doc)
+
+
+def _manual_jsonable(value):
+    """Recursive fallback. Only used if bson is somehow unavailable."""
     from datetime import datetime
-    out: dict = {}
-    for k, v in doc.items():
-        if isinstance(v, datetime):
-            out[k] = v.isoformat()
-        elif hasattr(v, "binary"):  # ObjectId
-            out[k] = str(v)
-        elif isinstance(v, list):
-            out[k] = [jsonable(x) if isinstance(x, dict) else x for x in v]
-        elif isinstance(v, dict):
-            out[k] = jsonable(v)
-        else:
-            out[k] = v
-    return out
+    if isinstance(value, dict):
+        return {k: _manual_jsonable(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_manual_jsonable(x) for x in value]
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, (str, int, float, bool, type(None))):
+        return value
+    return str(value)

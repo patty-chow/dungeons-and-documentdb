@@ -52,7 +52,7 @@ The CLI demos are the canonical path — they're the smallest amount of code tha
 streamlit run webui/app.py
 ```
 
-Opens at [http://localhost:8501](http://localhost:8501) with two tabs:
+Opens at [http://localhost:8501](http://localhost:8501) with two views you can switch between via a horizontal scene selector:
 
 - 🍺 **The Tavern** — chat on the left; live memory panel on the right showing visit count, known quests, recent conversation cards, and a "peek the raw document" expander.
 - 🧙 **The Athenaeum** — chat on the left; live vector search results on the right, including five spell cards with their cosine similarity scores, filter controls, and a "peek the aggregation pipeline" expander.

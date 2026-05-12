@@ -44,10 +44,22 @@ if not all_ok:
         "missing an LLM / embedding API key."
     )
 
-tab_tavern, tab_spell = st.tabs(["🍺 The Tavern", "🧙 The Athenaeum"])
+# Scene selector. We use a horizontal radio (rather than st.tabs) because
+# Streamlit forbids st.chat_input inside tabs. The horizontal radio with
+# collapsed label looks like a tab bar and lets each view render its own
+# chat input at script root.
+view = st.radio(
+    "Choose a scene",
+    options=["🍺 The Tavern", "🧙 The Athenaeum"],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="active_view",
+)
 
-with tab_tavern:
+st.divider()
+
+if view == "🍺 The Tavern":
     render_tavern()
-
-with tab_spell:
+else:
     render_spellbook()
+
