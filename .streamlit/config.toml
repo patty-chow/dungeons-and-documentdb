@@ -1,0 +1,15 @@
+[theme]
+# Dark by default. Primary = tavern gold; the spellbook tab uses arcane
+# purple via inline markdown.
+base = "dark"
+primaryColor = "#d4a857"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#1a1d23"
+textColor = "#fafafa"
+
+[server]
+port = 8501
+headless = false
+
+[browser]
+gatherUsageStats = false

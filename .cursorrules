@@ -1,0 +1,45 @@
+# Cursor / AI-coding-tool rules for dungeons-and-documentdb
+
+## Project context
+This is a PyCon 2026 demo project showing OSS DocumentDB
+(https://github.com/documentdb/documentdb) -- a MongoDB-compatible document
+database built on PostgreSQL. The audience is Python developers who have
+never used a document database. Code must be beginner-friendly.
+
+## Database rules
+- Use `pymongo` only. Do NOT introduce ODMs (Beanie, MongoEngine, etc.).
+- DocumentDB speaks the MongoDB wire protocol -- standard pymongo patterns
+  work. Connections require TLS (self-signed in dev):
+  `mongodb://USER:PASS@HOST:10260/?tls=true&tlsAllowInvalidCertificates=true`
+- Always read connection info from environment via `src.db.get_client()`.
+- The default port is 10260 (not 27017).
+- Vector indexes use the `cosmosSearch` operator:
+  - Index spec: `{"key": {"embedding": "cosmosSearch"}, "cosmosSearchOptions": {...}}`
+  - Query stage: `{"$search": {"cosmosSearch": {"vector": [...], "path": "embedding", "k": 5}}}`
+- Use `vector-hnsw` with cosine similarity unless told otherwise.
+
+## LLM rules
+- Anthropic Claude is preferred. OpenAI is the fallback.
+- Never hardcode model IDs deep in agent code -- they live in `src/llm.py`
+  and are configurable via env (`ANTHROPIC_MODEL`, `OPENAI_MODEL`).
+- Keep prompts in `src/tavern/npc.py` and `src/spellbook/wizard.py`.
+
+## Embeddings
+- Use Voyage AI when Anthropic is the provider, OpenAI embeddings otherwise.
+- Default dimensions: 1024 (Voyage voyage-3-lite) or 1536 (OpenAI
+  text-embedding-3-small). The vector index dimensions must match the model.
+
+## Spell data
+- `data/srd_spells.json` is CC-BY-4.0 from the 5e SRD ONLY.
+- Do NOT add non-SRD spells (no PHB-exclusive content, no homebrew, no
+  third-party content unless it is explicitly OGL/CC).
+
+## Style
+- Python 3.11+. Modern syntax (`X | Y` unions, `list[T]`).
+- Use `rich` for all CLI output -- no bare `print` calls in user-facing flows.
+- Keep functions under ~40 lines. Beginners are reading this.
+- Type hints everywhere. Docstrings on public functions.
+
+## Testing
+- Tests in `tests/` use `pytest`. Mock the LLM client -- don't make real calls.
+- The DB itself can be tested live (it's local in Docker).

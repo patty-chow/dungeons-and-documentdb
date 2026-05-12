@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dungeons-and-documentdb"
+version = "0.1.0"
+description = "A D&D-themed PyCon US 2026 demo for OSS DocumentDB: NPC memory + spell book RAG."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Patty Chow" }]
+keywords = ["documentdb", "mongodb", "vector-search", "rag", "pycon", "demo", "dnd"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Database",
+]
+dependencies = [
+  "pymongo>=4.6",
+  "anthropic>=0.40",
+  "openai>=1.30",
+  "voyageai>=0.2",
+  "python-dotenv>=1.0",
+  "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-mock>=3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/patty-chow/dungeons-and-documentdb"
+Issues = "https://github.com/patty-chow/dungeons-and-documentdb/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
