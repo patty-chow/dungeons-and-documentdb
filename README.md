@@ -61,30 +61,51 @@ You should see a `dnd` database with `npcs`, `players`, `conversations`, and `sp
 
 ## ⚡ Quickstart (run locally)
 
+
+1. Clone
 ```bash
-# 1. Clone
 git clone https://github.com/patty-chow/dungeons-and-documentdb.git
 cd dungeons-and-documentdb
+```
 
-# 2. Start DocumentDB (Docker)
-docker compose up -d
+2. Pull the DocumentDB Docker image:
+   ```bash
+   docker pull ghcr.io/documentdb/documentdb/documentdb-local:latest
+   ```
 
-# 3. Install Python deps (Python 3.11+)
+3. **Tag the image for convenience**:
+   ```bash
+   docker tag ghcr.io/documentdb/documentdb/documentdb-local:latest documentdb
+   ```
+
+4. Run the DocumentDB container:
+   ```bash
+   docker run -dt -p 10260:10260 --name documentdb-container documentdb --username admin --password dungeons123!
+   ```
+
+5. Install Python deps (Python 3.11+)
+```bash
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+```
 
-# 4. Add your LLM key (only needed for the chat demos)
+6. Add your LLM key (only needed for the chat demos)
+```bash
 cp .env.example .env
-# Edit .env -- OPENAI_API_KEY=sk-... (recommended; one key powers chat + embeddings)
-#              or ANTHROPIC_API_KEY=sk-ant-... (chat only; you'll still need OPENAI_API_KEY
-#              for the spell book's vector search to match the shipped embeddings)
+ Edit .env -- OPENAI_API_KEY=sk-... (recommended; one key powers chat + embeddings)
+              or ANTHROPIC_API_KEY=sk-ant-... (chat only; you'll still need OPENAI_API_KEY
+              for the spell book's vector search to match the shipped embeddings)
+```
 
-# 5. Load NPCs, the player, and the spell book (uses pre-embedded data,
-#    no LLM key required). Vector search works immediately.
+5. Load NPCs, the player, and the spell book (uses pre-embedded data,
+    no LLM key required). Vector search works immediately.
+```bash
 python scripts/load_data.py
+```
 
-# 6. Roll for initiative!
+7. Roll for initiative!
+```bash
 python -m src.tavern.chat        # Chat with Bram the tavern keeper
 python -m src.spellbook.chat     # Ask Elara about spells
 ```
